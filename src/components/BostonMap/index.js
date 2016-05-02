@@ -27,7 +27,7 @@ export class BostonMap extends D3Chart {
 
         this.currentMetric = (d) => {
           if (how === "pop") {
-            return d.TOT_POP / d.ALAND;
+            return d.TOT_POP / (d.ALAND * 0.00002295684);
           } else if (how === "transmod") {
             return d.TRANSIT / d.TOT_WKRS;
           } else if (how === "zero") {
@@ -330,7 +330,77 @@ ${frequencyTip(d)}`)
           subwayPath.style("stroke", d => lineScale(d.properties[this.when]));
           busPath.style("stroke-dasharray", d => d.properties[this.when] === 0 ? "10,10" : "")
           busPath.style("stroke", d => lineScale(d.properties[this.when]));
-        } else {
+		  
+		//remove old freq legend if already exists. 
+		d3.selectAll("#freqlegend-text")
+		.remove();
+		d3.selectAll("#freqlegend-title")
+		.remove();
+		d3.selectAll("rect#freqlegend-rect")
+		.remove();
+		
+		
+		//legend for frequency lines.
+		
+	this.freqtitle = this.svg.append("text")
+		.attr("id", "freqlegend-title")
+		.attr("x", this.props.width - 100) 
+		.attr("y", 60)
+		.text("Service Frequency"); 
+		
+		
+		this.freqlegend = this.svg.selectAll("g.freqlegend")
+			.data(lineScale.range())
+			.enter()
+			.append("g");
+			
+		this.freqlegend
+		.append('rect')
+		.attr("id", "freqlegend-rect")
+		.attr("x", this.props.width - 100)
+		.attr("y", function(d,i) { return 70 + i * 20})
+		.attr("width", 20)
+		.attr("height", 3)
+		.attr("class", function(d, i) {return "freq"+i});  
+		  
+		
+	
+  
+		  
+		this.freqlegend
+		.append("text")
+		.attr("id", "freqlegend-text")
+		.attr("x", this.props.width - 75) 
+		.attr("y", function(d, i) {
+		   return 70 + i * 20;
+		})
+		.attr("dy", "0.8em") //place text one line *below* the x,y point
+		.text(function(d, i){
+			console.log(i);
+			if(i === 0){
+				return "No service"	
+			}
+			else if (i === 6){
+				return "60 min or greater";	
+			}
+			else{
+			this.extent = lineScale.invertExtent(d);
+			
+			return (+this.extent[0]) + " min - " + (+this.extent[1]-1) + " min";
+			}
+		}); 
+        } 
+		
+		else {
+		//remove old freq legend if already exists. 
+		d3.selectAll("#freqlegend-text")
+		.remove();
+		d3.selectAll("rect#freqlegend-rect")
+		.remove();	
+		d3.selectAll("#freqlegend-title")
+		.remove();
+			
+			
           subwayPath.style("stroke", d => d.properties.LINE.toLowerCase());
           congestionPath.style("fill", d => LIGHT_COLORS[d.properties.LINE]);
           congestionPath.style("stroke", d => LIGHT_COLORS[d.properties.LINE]);
@@ -360,7 +430,55 @@ ${frequencyTip(d)}`)
 
         this.chart.selectAll(".blocks path")
           .attr("class", d => this.how ? scale(this.currentMetric(d.properties)) : "");
+		  
+	//delete old block group legends
+	d3.selectAll("#legend-text")
+	.remove();
+	d3.selectAll("rect#legend-rect")
+	.remove();
+	
+	
+	//legend for block groups. 	
+	if(vis.how !== ""){	
+		
+	this.legend = this.svg.selectAll("g.legendEntry")
+		.data(scale.range())
+		.enter()
+		.append("g");
+	this.legend
+    	.append('rect')
+		.attr("id", "legend-rect")
+    	.attr("x", 20)
+    	.attr("y", function(d, i) { return 200 + i * 20;})
+   		.attr("width", 10)
+   		.attr("height", 10)
+   		.attr("class", function(d, i){return "q" + i + "-9"}); 
+		
+	this.legend.append("text")
+    .attr("id", "legend-text")
+    .attr("x", 35) 
+    .attr("y", function(d, i) {
+       return 200 + i * 20;
+    })
+    .attr("dy", "0.8em") //place text one line *below* the x,y point
+    .text(function(d, i){
+		this.extent = scale.invertExtent(d);
+		if(vis.how === "income" || vis.how === "pop"){
+			this.format = d3.format(",");
+
+			return this.format(d3.round(+this.extent[0],0)) + " - " + this.format(d3.round(+this.extent[1],0));
+		}
+		else if(vis.how === "transmod" || vis.how === "zero"){
+			this.format = d3.format(",%");
+			return this.format(+this.extent[0]) + " - " + this.format(+this.extent[1]);
+		}
+	});  
+
+	}
+
+		  
       };
+
 
       this.svg.append("text")
           .attr("class", "zoom-button")
@@ -375,6 +493,7 @@ ${frequencyTip(d)}`)
           .attr("dy", "2.4em")
           .text("\uE016")
           .on("click", () => zoomClick("out"));
+		  
     })
   }
 }

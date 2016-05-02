@@ -242,7 +242,7 @@ export class Nerds extends Component {
 
             <p>
               In the graph above, the population line is the sum of the
-              population estimates for Boston, Somerville, and Newton, as
+              population estimates for Suffolk (Boston), Middlesex (Cambridge, Somerville), and Norfolk (Brookline and South Shore) Counties, as
               compiled by the US Census Bureau. These are the three
               municipalities served by the MBTA's rapid transit lines for which
               data is readily available. The ridership line is the average
